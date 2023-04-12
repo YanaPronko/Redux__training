@@ -2,15 +2,19 @@ import { useHttp } from "../../hooks/http.hook";
 import { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { createSelector } from "reselect";
-
+import { createSelector } from '@reduxjs/toolkit';
 
 import {
-  heroesFetching,
-  heroesFetched,
-  heroesFetchingError,
-  heroDeleted,
-} from "../../actions";
+  heroesDeleted,
+  fetchHeroes,
+  filteredHeroesSelector, selectAll,
+} from "./heroSlice";
+// import {
+//   fetchHeroes,
+//   // heroesFetching,
+//   // heroesFetched,
+//   // heroesFetchingError,
+// } from "../../actions";
 import HeroesListItem from "../heroesListItem/HeroesListItem";
 import Spinner from "../spinner/Spinner";
 
@@ -35,18 +39,20 @@ const HeroesList = () => {
   // и весь фильтрованный список рисуется заново
   // поэтому надо использовать библиотеку reselect
 
-  const filteredHeroesSelector = createSelector(
-    (state) => state.filtersReducer.activeFilter,
-    (state) => state.heroesReducer.heroes,
-    (activeFilter, heroes) => {
-      if (activeFilter === "all") {
-        console.log("render");
-        return heroes;
-      } else {
-        return heroes.filter((item) => item.element === activeFilter);
-      }
-    }
-  );
+  // const filteredHeroesSelector = createSelector(
+  //   (state) => state.filters.activeFilter,
+  //   // (state) => state.heroesReducer.heroes,
+  //   selectAll,
+  //   (activeFilter, heroes) => {
+  //     if (activeFilter === "all") {
+  //       console.log("render");
+  //       console.log(heroes);
+  //       return heroes;
+  //     } else {
+  //       return heroes.filter((item) => item.element === activeFilter);
+  //     }
+  //   }
+  // );
 
   // const filteredHeroes = useSelector((state) => {
   //   if (state.filtersReducer.activeFilter === "all") {
@@ -58,21 +64,31 @@ const HeroesList = () => {
   // });
 
   const filteredHeroes = useSelector(filteredHeroesSelector)
-  const heroesLoadingStatus = useSelector((state) => state.heroesReducer.heroesLoadingStatus);
+  const heroesLoadingStatus = useSelector((state) => state.heroes.heroesLoadingStatus);
   const dispatch = useDispatch();
   const { request } = useHttp();
 
-  useEffect(() => {
-    // dispatch(heroesFetching());
-    dispatch(heroesFetching);
+   useEffect(() => {
+     dispatch(fetchHeroes());
+     // eslint-disable-next-line
+   }, []);
+  // useEffect(() => {
+  //   dispatch(fetchHeroes(request));
 
-    // dispatch("HEROES_FETCHING")
-    request("http://localhost:3001/heroes")
-      .then((data) => dispatch(heroesFetched(data)))
-      .catch(() => dispatch(heroesFetchingError()));
+  //   // eslint-disable-next-line
+  // }, []);
 
-    // eslint-disable-next-line
-  }, []);
+  // useEffect(() => {
+  //   // dispatch(heroesFetching());
+  //   dispatch(heroesFetching);
+
+  //   // dispatch("HEROES_FETCHING")
+  //   request("http://localhost:3001/heroes")
+  //     .then((data) => dispatch(heroesFetched(data)))
+  //     .catch(() => dispatch(heroesFetchingError()));
+
+  //   // eslint-disable-next-line
+  // }, []);
 
   // Функция берет id и по нему удаляет ненужного персонажа из store
   // ТОЛЬКО если запрос на удаление прошел успешно
@@ -82,7 +98,7 @@ const HeroesList = () => {
       // Удаление персонажа по его id
       request(`http://localhost:3001/heroes/${id}`, "DELETE")
         .then((data) => console.log(data, "Deleted"))
-        .then(dispatch(heroDeleted(id)))
+        .then(dispatch(heroesDeleted(id)))
         .catch((err) => console.log(err));
       // eslint-disable-next-line
     },

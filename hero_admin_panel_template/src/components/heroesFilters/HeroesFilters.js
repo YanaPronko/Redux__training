@@ -1,15 +1,13 @@
 import { useHttp } from "../../hooks/http.hook";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { selectAll } from './filtersSlice';
 import classNames from "classnames";
 
-
-import {
-  filtersFetching,
-  filtersFetched,
-  filtersFetchingError,
-  activeFilterChanged,
-} from "../../actions";
+import { filtersFetching, filtersFetched, filtersFetchingError, activeFilterChanged } from './filtersSlice';
+// import { fetchFilters } from "../../actions";
+import { fetchFilters } from './filtersSlice';
+import store from '../../store/index';
 import Spinner from "../spinner/Spinner";
 
 // Задача для этого компонента:
@@ -23,20 +21,33 @@ const HeroesFilters = () => {
   // const { filters, filtersLoadingStatus, activeFilter } = useSelector((state) => state);
 
   // Так как в state теперь у нас 2 объекта, то надо обращаться к конкретному
-  const { filters, filtersLoadingStatus, activeFilter } = useSelector((state) => state.filtersReducer);
+  const { /* filters */ filtersLoadingStatus, activeFilter } = useSelector(
+    (state) => state.filters
+  );
 
+  const filters = selectAll(store.getState());
   const dispatch = useDispatch();
-  const { request } = useHttp();
+  // const { request } = useHttp();
+
+  useEffect(() => {
+    dispatch(fetchFilters());
+      // eslint-disable-next-line
+  }, []);
+
+  // useEffect(() => {
+  //   dispatch(fetchFilters(request));
+  //     // eslint-disable-next-line
+  // }, []);
 
   // Запрос на сервер для получения фильтров и последовательной смены состояния
-  useEffect(() => {
-    dispatch(filtersFetching());
-    request("http://localhost:3001/filters")
-      .then((data) => dispatch(filtersFetched(data)))
-      .catch(() => dispatch(filtersFetchingError()));
+  // useEffect(() => {
+  //   dispatch(filtersFetching());
+  //   request("http://localhost:3001/filters")
+  //     .then((data) => dispatch(filtersFetched(data)))
+  //     .catch(() => dispatch(filtersFetchingError()));
 
-    // eslint-disable-next-line
-  }, []);
+  //   // eslint-disable-next-line
+  // }, []);
 
   if (filtersLoadingStatus === "loading") {
     return <Spinner />;
